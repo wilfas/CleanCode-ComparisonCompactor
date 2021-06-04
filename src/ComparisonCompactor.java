@@ -10,8 +10,6 @@ public class ComparisonCompactor {
 	private int contextLength;
 	private String expected;
 	private String actual;
-	private String compactExpected;
-	private String compactActual;
 	private int prefixLength;
 	private int suffixLength;
 
@@ -22,13 +20,14 @@ public class ComparisonCompactor {
 	}
 
 	public String formatCompactedComparison(String message) {
+		String compactExpected = expected;
+		String compactActual = actual;
 		if (shouldBeCompacted()) {
 			findCommonPrefixAndSuffix();
-			compactExpectedAndActual();
-			return Assert.format(message, compactExpected, compactActual);
-		} else {
-			return Assert.format(message, expected, actual);
-		}
+			compactExpected = compact(expected);
+			compactActual = compact(actual);
+		}	
+		return Assert.format(message, compactExpected, compactActual);
 	}
 
 	private boolean shouldBeCompacted() {
@@ -37,11 +36,6 @@ public class ComparisonCompactor {
 
 	private boolean shouldNotBeCompacted() {		
 		return expected == null || actual == null || expected.equals(actual);
-	}
-
-	private void compactExpectedAndActual() {
-		compactExpected = compactString(expected);
-		compactActual = compactString(actual);
 	}
 
 	private void findCommonPrefixAndSuffix() {
@@ -71,13 +65,14 @@ public class ComparisonCompactor {
 		return s.charAt(s.length() - i - 1);
 	}
 
-	private String compactString(String source) {
-		return 
-			computeCommonPrefix() +	
-			DELTA_START + 
-			source.substring(prefixLength, source.length() - suffixLength) +
-			DELTA_END +
-			computeCommonSuffix();
+	private String compact(String source) {
+		return new StringBuilder()
+			.append(computeCommonPrefix())
+			.append(DELTA_START) 
+			.append(source.substring(prefixLength, source.length() - suffixLength))
+			.append(DELTA_END)
+			.append(computeCommonSuffix())
+			.toString();
 	}
 
 	private String computeCommonPrefix() {
