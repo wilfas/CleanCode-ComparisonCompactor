@@ -22,7 +22,8 @@ public class ComparisonCompactor {
 	}
 
 	public String formatCompactedComparison(String message) {
-		if (canBeCompacted()) {
+		if (shouldBeCompacted()) {
+			findCommonPrefixAndSuffix();
 			compactExpectedAndActual();
 			return Assert.format(message, compactExpected, compactActual);
 		} else {
@@ -30,12 +31,15 @@ public class ComparisonCompactor {
 		}
 	}
 
-	private boolean canBeCompacted() {
-		return expected != null && actual != null && !areStringsEqual();
+	private boolean shouldBeCompacted() {
+		return !shouldNotBeCompacted();
+	}
+
+	private boolean shouldNotBeCompacted() {		
+		return expected == null || actual == null || expected.equals(actual);
 	}
 
 	private void compactExpectedAndActual() {
-		findCommonPrefixAndSuffix();
 		compactExpected = compactString(expected);
 		compactActual = compactString(actual);
 	}
@@ -57,14 +61,14 @@ public class ComparisonCompactor {
 				break;
 	}
 
-	private char charFromEnd(String s, int i) {
-		return s.charAt(s.length() - i - 1);
-	}
-
 	private boolean suffixOverlapsPrefix(int suffixLength) {
 		return 
 			actual.length() - suffixLength <= prefixLength ||
 			expected.length() - suffixLength <= prefixLength;
+	}
+
+	private char charFromEnd(String s, int i) {
+		return s.charAt(s.length() - i - 1);
 	}
 
 	private String compactString(String source) {
@@ -89,9 +93,4 @@ public class ComparisonCompactor {
 		return expected.substring(expected.length() - suffixLength, end)
 				+ (expected.length() - suffixLength < expected.length() - contextLength ? ELLIPSIS : "");
 	}
-
-	private boolean areStringsEqual() {
-		return expected.equals(actual);
-	}
-
 }
